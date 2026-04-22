@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  font-family: 'Nunito', sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f0eb;
+  -webkit-text-size-adjust: 100%;
+}
+
+::-webkit-scrollbar { display: none; }
+
+input, select, button, textarea {
+  font-family: 'Nunito', sans-serif;
+  -webkit-appearance: none;
+}
