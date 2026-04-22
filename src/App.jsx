@@ -42,6 +42,7 @@ export default function App() {
   const [editPedido, setEditPedido]   = useState(null)
   const [editProduto, setEditProduto] = useState(null)
   const [viewPedido, setViewPedido]   = useState(null)
+  const [modoEntrega, setModoEntrega] = useState(null)
 
   // ── STARTUP ────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -188,8 +189,8 @@ export default function App() {
 
       {/* CONTEÚDO */}
       <main className="pb-36">
-        {tab === 'pedidos'    && <PedidosScreen   pedidos={pedidos}  produtos={produtos} onAdd={() => { setEditPedido(null); setModal('pedido') }} onColar={() => setModal('colar')} onEdit={p => { setEditPedido(p); setModal('pedido') }} onDelete={deletePedido} onView={p => { setViewPedido(p); setModal('detalhe') }} onEntregar={entregarPedido} onPrintTodos={() => printTodos(pedidos, produtos, periodo)} />}
-        {tab === 'entregas'   && <EntregasScreen  pedidos={pedidos}  produtos={produtos} onEntregar={entregarPedido} onFinalizar={finalizarEntrega} onView={p => { setViewPedido(p); setModal('detalhe') }} />}
+        {tab === 'pedidos'    && <PedidosScreen   pedidos={pedidos}  produtos={produtos} onAdd={() => { setEditPedido(null); setModal('pedido') }} onColar={() => setModal('colar')} onEdit={p => { setEditPedido(p); setModal('pedido') }} onDelete={deletePedido} onView={p => { setViewPedido(p); setModal('detalhe') }} onEntregar={entregarPedido} onIniciarEntrega={p => setModoEntrega(p)} onPrintTodos={() => printTodos(pedidos, produtos, periodo)} />}
+        {tab === 'entregas'   && <EntregasScreen  pedidos={pedidos}  produtos={produtos} onEntregar={entregarPedido} onFinalizar={finalizarEntrega} onView={p => { setViewPedido(p); setModal('detalhe') }} onIniciarEntrega={p => setModoEntrega(p)} />}
         {tab === 'produtos'   && <ProdutosScreen  produtos={produtos} onAdd={() => { setEditProduto(null); setModal('produto') }} onEdit={p => { setEditProduto(p); setModal('produto') }} onDelete={deleteProduto} />}
         {tab === 'fechamento' && <FechamentoScreen pedidos={pedidos} produtos={produtos} periodo={periodo} onPrintTodos={() => printTodos(pedidos, produtos, periodo)} />}
       </main>
@@ -226,6 +227,21 @@ export default function App() {
       {modal === 'produto'  && <ModalProduto  produto={editProduto}               onSave={saveProduto}  onClose={closeModal} />}
       {modal === 'periodo'  && <ModalPeriodo  periodo={periodo}                   onSave={changePeriodo} onClose={closeModal} />}
       {modal === 'colar'    && <ModalColarPedido produtos={produtos} onSave={savePedido} onClose={closeModal} />}
+
+      {/* MODO ENTREGA — overlay global, acessível de qualquer tab */}
+      {modoEntrega && (
+        <div className="fixed inset-0 z-50 bg-stone-100 overflow-y-auto pb-4">
+          <ModoEntrega
+            pedido={modoEntrega}
+            produtos={produtos}
+            onCancelar={() => setModoEntrega(null)}
+            onFinalizar={(itens, pagamento, troco, obs) => {
+              finalizarEntrega(modoEntrega.id, itens, pagamento, troco, obs)
+              setModoEntrega(null)
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
@@ -233,7 +249,7 @@ export default function App() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCREEN: PEDIDOS
 // ═══════════════════════════════════════════════════════════════════════════════
-function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, onView, onEntregar, onPrintTodos }) {
+function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, onView, onEntregar, onIniciarEntrega, onPrintTodos }) {
   const [busca, setBusca]   = useState('')
   const [filtro, setFiltro] = useState('todos')
 
@@ -289,7 +305,7 @@ function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, on
               <div className="grid grid-cols-3 border-t border-stone-100">
                 <button onClick={() => onEdit(pedido)} className="py-2.5 text-xs font-bold text-blue-600 flex items-center justify-center gap-1 active:bg-blue-50">✏️ Editar</button>
                 {pedido.status === 'pendente'
-                  ? <button onClick={() => onEntregar(pedido.id)} className="py-2.5 text-xs font-bold text-green-700 flex items-center justify-center border-x border-stone-100 active:bg-green-50">✓ Entregar</button>
+                  ? <button onClick={() => onIniciarEntrega(pedido)} className="py-2.5 text-xs font-bold text-green-700 flex items-center justify-center border-x border-stone-100 active:bg-green-50">✓ Entregar</button>
                   : <div className="py-2.5 text-xs text-stone-300 flex items-center justify-center border-x border-stone-100">✅ Entregue</div>
                 }
                 <button onClick={() => onDelete(pedido.id)} className="py-2.5 text-xs font-bold text-red-500 flex items-center justify-center active:bg-red-50">🗑️ Excluir</button>
@@ -299,8 +315,8 @@ function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, on
         })}
       </div>
 
-      <button onClick={onAdd} className="fixed bottom-20 right-4 w-16 h-16 bg-green-700 text-white rounded-full shadow-xl flex items-center justify-center z-10 active:scale-95 text-3xl">＋</button>
-      <button onClick={onColar} title="Colar pedido do WhatsApp" className="fixed bottom-20 right-24 w-14 h-14 bg-white border-2 border-green-700 text-green-700 rounded-full shadow-xl flex flex-col items-center justify-center z-10 active:scale-95">
+      <button onClick={onAdd} className="fixed bottom-28 right-4 w-16 h-16 bg-green-700 text-white rounded-full shadow-xl flex items-center justify-center z-10 active:scale-95 text-3xl">＋</button>
+      <button onClick={onColar} title="Colar pedido do WhatsApp" className="fixed bottom-28 right-24 w-14 h-14 bg-white border-2 border-green-700 text-green-700 rounded-full shadow-xl flex flex-col items-center justify-center z-10 active:scale-95">
         <span className="text-xl leading-none">📋</span>
         <span className="text-xs font-black leading-none mt-0.5">Colar</span>
       </button>
@@ -311,25 +327,9 @@ function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, on
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCREEN: ENTREGAS
 // ═══════════════════════════════════════════════════════════════════════════════
-function EntregasScreen({ pedidos, produtos, onEntregar, onFinalizar, onView }) {
-  const [modoEntrega, setModoEntrega] = useState(null) // pedido em entrega
-
+function EntregasScreen({ pedidos, produtos, onEntregar, onFinalizar, onView, onIniciarEntrega }) {
   const pendentes = pedidos.filter(p => p.status === 'pendente').sort((a, b) => a.clienteNome.localeCompare(b.clienteNome))
   const entregues = pedidos.filter(p => p.status === 'entregue').sort((a, b) => a.clienteNome.localeCompare(b.clienteNome))
-
-  if (modoEntrega) return (
-    <div className="fixed inset-0 z-50 bg-stone-100 overflow-y-auto pb-4">
-    <ModoEntrega
-      pedido={modoEntrega}
-      produtos={produtos}
-      onCancelar={() => setModoEntrega(null)}
-      onFinalizar={(itens, pagamento, troco, obs) => {
-        onFinalizar(modoEntrega.id, itens, pagamento, troco, obs)
-        setModoEntrega(null)
-      }}
-    />
-    </div>
-  )
 
   return (
     <div className="px-4 py-4">
@@ -338,7 +338,7 @@ function EntregasScreen({ pedidos, produtos, onEntregar, onFinalizar, onView }) 
         <SectionLabel icon="⏰" text={`Pendentes · ${pendentes.length}`} color="amber" />
         {pendentes.map(p => (
           <div key={p.id} className="bg-white rounded-2xl border border-stone-200 shadow-sm mb-3 overflow-hidden">
-            <button className="w-full text-left p-4" onClick={() => setModoEntrega(p)}>
+            <button className="w-full text-left p-4" onClick={() => onIniciarEntrega(p)}>
               <div className="flex justify-between items-center">
                 <div>
                   <div className="text-2xl font-black text-stone-800">{p.clienteNome}</div>
