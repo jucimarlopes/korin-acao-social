@@ -1016,19 +1016,10 @@ function ModalColarPedido({ produtos, onSave, onClose }) {
     setLoading(true)
     setErro('')
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch('/api/interpretar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 500,
-          system: `Você interpreta mensagens de pedidos do WhatsApp do Clube Korin.
-Extraia: nome do cliente (se houver) e itens (código numérico + quantidade).
-Responda SOMENTE JSON válido, sem texto, sem markdown:
-{"nome":"Nome ou null","itens":[{"cod":9,"qty":2}]}
-Ignore textos irrelevantes. Quantidade mínima é 1.`,
-          messages: [{ role: 'user', content: texto }]
-        })
+        body: JSON.stringify({ texto })
       })
       const data = await res.json()
       const raw  = data.content?.[0]?.text || ''
