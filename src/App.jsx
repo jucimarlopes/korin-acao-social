@@ -169,10 +169,9 @@ export default function App() {
     <div className="min-h-screen bg-stone-100 w-full relative">
       {/* HEADER */}
       <header className="bg-green-800 text-white sticky top-0 z-20 shadow-md">
-        {/* Logos */}
-        <div className="bg-white flex items-center justify-between px-3 py-1.5 border-b border-green-700">
-          <img src="/logo-lattuga.png" alt="Lattuga Orgânicos" className="h-9 w-auto" />
-          <img src="/logo-korin.png"   alt="Korin"            className="h-8 w-auto" style={{filter:'brightness(0) invert(1)'}} />
+        {/* Logo */}
+        <div className="bg-white flex items-center justify-center px-3 py-2 border-b border-green-700">
+          <img src="/logo-lattuga.png" alt="Lattuga Orgânicos" className="h-12 w-auto" />
         </div>
         {/* Título + período + sync */}
         <div className="px-4 py-2.5 flex items-center justify-between">
@@ -312,8 +311,8 @@ function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, on
         })}
       </div>
 
-      <button onClick={onAdd} className="fixed bottom-36 right-4 w-16 h-16 bg-green-700 text-white rounded-full shadow-xl flex items-center justify-center z-30 active:scale-95 text-3xl">＋</button>
-      <button onClick={onColar} title="Colar pedido do WhatsApp" className="fixed bottom-36 right-24 w-14 h-14 bg-white border-2 border-green-700 text-green-700 rounded-full shadow-xl flex flex-col items-center justify-center z-30 active:scale-95">
+      <button onClick={onAdd} className="fixed bottom-44 right-4 w-16 h-16 bg-green-700 text-white rounded-full shadow-xl flex items-center justify-center z-30 active:scale-95 text-3xl">＋</button>
+      <button onClick={onColar} title="Colar pedido do WhatsApp" className="fixed bottom-44 right-24 w-14 h-14 bg-white border-2 border-green-700 text-green-700 rounded-full shadow-xl flex flex-col items-center justify-center z-30 active:scale-95">
         <span className="text-xl leading-none">📋</span>
         <span className="text-xs font-black leading-none mt-0.5">Colar</span>
       </button>
