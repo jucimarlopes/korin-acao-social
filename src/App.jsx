@@ -318,6 +318,7 @@ function EntregasScreen({ pedidos, produtos, onEntregar, onFinalizar, onView }) 
   const entregues = pedidos.filter(p => p.status === 'entregue').sort((a, b) => a.clienteNome.localeCompare(b.clienteNome))
 
   if (modoEntrega) return (
+    <div className="fixed inset-0 z-50 bg-stone-100 overflow-y-auto pb-4">
     <ModoEntrega
       pedido={modoEntrega}
       produtos={produtos}
@@ -327,6 +328,7 @@ function EntregasScreen({ pedidos, produtos, onEntregar, onFinalizar, onView }) 
         setModoEntrega(null)
       }}
     />
+    </div>
   )
 
   return (
