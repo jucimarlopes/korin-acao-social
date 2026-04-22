@@ -130,6 +130,13 @@ export default function App() {
     ))
   }
 
+  // Finaliza entrega com itens ajustados + pagamento
+  const finalizarEntrega = (id, itensAjustados, pagamento, troco, obs) => {
+    atualizarPedidos(pedidos.map(x =>
+      x.id === id ? { ...x, status: 'entregue', dataEntrega: new Date().toISOString(), itens: itensAjustados, pagamento, troco, obs } : x
+    ))
+  }
+
   const saveProduto = (p) => {
     const novo = p.id
       ? produtos.map(x => x.id === p.id ? p : x)
@@ -158,7 +165,7 @@ export default function App() {
   )
 
   return (
-    <div className="min-h-screen bg-stone-100 max-w-lg mx-auto relative">
+    <div className="min-h-screen bg-stone-100 w-full relative">
       {/* HEADER */}
       <header className="bg-green-800 text-white sticky top-0 z-20 shadow-md">
         {/* Logos */}
@@ -181,14 +188,14 @@ export default function App() {
 
       {/* CONTEÚDO */}
       <main className="pb-36">
-        {tab === 'pedidos'    && <PedidosScreen   pedidos={pedidos}  produtos={produtos} onAdd={() => { setEditPedido(null); setModal('pedido') }} onEdit={p => { setEditPedido(p); setModal('pedido') }} onDelete={deletePedido} onView={p => { setViewPedido(p); setModal('detalhe') }} onEntregar={entregarPedido} onPrintTodos={() => printTodos(pedidos, produtos, periodo)} />}
-        {tab === 'entregas'   && <EntregasScreen  pedidos={pedidos}  produtos={produtos} onEntregar={entregarPedido} onView={p => { setViewPedido(p); setModal('detalhe') }} />}
+        {tab === 'pedidos'    && <PedidosScreen   pedidos={pedidos}  produtos={produtos} onAdd={() => { setEditPedido(null); setModal('pedido') }} onColar={() => setModal('colar')} onEdit={p => { setEditPedido(p); setModal('pedido') }} onDelete={deletePedido} onView={p => { setViewPedido(p); setModal('detalhe') }} onEntregar={entregarPedido} onPrintTodos={() => printTodos(pedidos, produtos, periodo)} />}
+        {tab === 'entregas'   && <EntregasScreen  pedidos={pedidos}  produtos={produtos} onEntregar={entregarPedido} onFinalizar={finalizarEntrega} onView={p => { setViewPedido(p); setModal('detalhe') }} />}
         {tab === 'produtos'   && <ProdutosScreen  produtos={produtos} onAdd={() => { setEditProduto(null); setModal('produto') }} onEdit={p => { setEditProduto(p); setModal('produto') }} onDelete={deleteProduto} />}
         {tab === 'fechamento' && <FechamentoScreen pedidos={pedidos} produtos={produtos} periodo={periodo} onPrintTodos={() => printTodos(pedidos, produtos, periodo)} />}
       </main>
 
       {/* BOTTOM NAV */}
-      <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-lg bg-white border-t border-stone-200 flex z-20 shadow-2xl">
+      <nav className="fixed bottom-8 left-0 w-full bg-white border-t border-stone-200 flex z-20 shadow-2xl">
         {[
           { id: 'pedidos',    icon: '🛒', label: 'Pedidos' },
           { id: 'entregas',   icon: '🚚', label: 'Entregas' },
@@ -205,8 +212,8 @@ export default function App() {
       </nav>
 
       {/* RODAPÉ */}
-      <footer className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-lg bg-green-900 z-20 flex items-center justify-between px-3 py-1.5">
-        <span className="text-green-400 text-xs font-semibold">© Todos os Direitos Reservados — Lattuga Orgânicos</span>
+      <footer className="fixed bottom-0 left-0 w-full bg-green-900 z-20 flex items-center justify-between px-3 py-1.5">
+        <span className="text-green-400 text-xs font-semibold">© Todos os Direitos Reservados — <a href="https://lattuga-organicos.vercel.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">Lattuga Orgânicos</a></span>
         <a href="https://www.personalsupport.tec.br/" target="_blank" rel="noopener noreferrer"
           className="text-green-300 text-xs font-bold hover:text-white transition-colors underline underline-offset-2 flex-shrink-0 ml-2">
           Desenvolvido por Personal Support
@@ -218,6 +225,7 @@ export default function App() {
       {modal === 'detalhe'  && viewPedido && <ModalDetalhe  pedido={viewPedido}  produtos={produtos} periodo={periodo} onClose={closeModal} onPrint={() => printPedido(viewPedido, produtos, periodo)} />}
       {modal === 'produto'  && <ModalProduto  produto={editProduto}               onSave={saveProduto}  onClose={closeModal} />}
       {modal === 'periodo'  && <ModalPeriodo  periodo={periodo}                   onSave={changePeriodo} onClose={closeModal} />}
+      {modal === 'colar'    && <ModalColarPedido produtos={produtos} onSave={savePedido} onClose={closeModal} />}
     </div>
   )
 }
@@ -225,7 +233,7 @@ export default function App() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCREEN: PEDIDOS
 // ═══════════════════════════════════════════════════════════════════════════════
-function PedidosScreen({ pedidos, produtos, onAdd, onEdit, onDelete, onView, onEntregar, onPrintTodos }) {
+function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, onView, onEntregar, onPrintTodos }) {
   const [busca, setBusca]   = useState('')
   const [filtro, setFiltro] = useState('todos')
 
@@ -292,6 +300,10 @@ function PedidosScreen({ pedidos, produtos, onAdd, onEdit, onDelete, onView, onE
       </div>
 
       <button onClick={onAdd} className="fixed bottom-20 right-4 w-16 h-16 bg-green-700 text-white rounded-full shadow-xl flex items-center justify-center z-10 active:scale-95 text-3xl">＋</button>
+      <button onClick={onColar} title="Colar pedido do WhatsApp" className="fixed bottom-20 right-24 w-14 h-14 bg-white border-2 border-green-700 text-green-700 rounded-full shadow-xl flex flex-col items-center justify-center z-10 active:scale-95">
+        <span className="text-xl leading-none">📋</span>
+        <span className="text-xs font-black leading-none mt-0.5">Colar</span>
+      </button>
     </div>
   )
 }
@@ -299,64 +311,288 @@ function PedidosScreen({ pedidos, produtos, onAdd, onEdit, onDelete, onView, onE
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCREEN: ENTREGAS
 // ═══════════════════════════════════════════════════════════════════════════════
-function EntregasScreen({ pedidos, produtos, onEntregar, onView }) {
+function EntregasScreen({ pedidos, produtos, onEntregar, onFinalizar, onView }) {
+  const [modoEntrega, setModoEntrega] = useState(null) // pedido em entrega
+
   const pendentes = pedidos.filter(p => p.status === 'pendente').sort((a, b) => a.clienteNome.localeCompare(b.clienteNome))
   const entregues = pedidos.filter(p => p.status === 'entregue').sort((a, b) => a.clienteNome.localeCompare(b.clienteNome))
 
-  const Card = ({ pedido, done }) => {
-    const vt = calcTotal(pedido, produtos)
-    return (
-      <div className={`bg-white rounded-2xl border shadow-sm mb-3 overflow-hidden ${done ? 'border-green-200' : 'border-stone-200'}`}>
-        <button className="w-full text-left p-4" onClick={() => onView(pedido)}>
-          <div className="flex justify-between items-start mb-3">
-            <div>
-              <div className="text-2xl font-black text-stone-800">{pedido.clienteNome}</div>
-              {pedido.clienteTel && <div className="text-sm text-stone-400 mt-0.5">📱 {pedido.clienteTel}</div>}
-            </div>
-            <div className="text-right flex-shrink-0 ml-3">
-              <div className="text-2xl font-black text-green-700">{fmt(vt)}</div>
-              <div className="text-xs text-stone-400 mt-0.5">{pedido.pagamento || 'A definir'}</div>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            {sortByCod(pedido.itens, produtos).map((it, i) => {
-              const p = produtos.find(x => x.id === it.produtoId)
-              if (!p) return null
-              return (
-                <div key={i} className="flex justify-between items-center bg-stone-50 rounded-xl px-3 py-2">
-                  <span className="text-base text-stone-700">
-                    <span className="text-xs bg-stone-200 text-stone-500 px-1.5 py-0.5 rounded font-black mr-1.5">{p.cod}</span>
-                    <span className="font-black text-green-700">{it.qty}×</span> {p.nome}
-                  </span>
-                  <span className="text-xs text-stone-400 flex-shrink-0 ml-2">{p.unidade}</span>
-                </div>
-              )
-            })}
-          </div>
-        </button>
-        {!done
-          ? <button onClick={() => onEntregar(pedido.id)} className="w-full py-4 bg-green-700 text-white font-black text-lg flex items-center justify-center gap-2 active:bg-green-800">
-              ✅ Marcar como Entregue
-            </button>
-          : <div className="py-3 flex items-center justify-center gap-2 text-green-600 text-sm font-bold border-t border-green-100">
-              ✅ Entregue em {new Date(pedido.dataEntrega).toLocaleDateString('pt-BR')}
-            </div>
-        }
-      </div>
-    )
-  }
+  if (modoEntrega) return (
+    <ModoEntrega
+      pedido={modoEntrega}
+      produtos={produtos}
+      onCancelar={() => setModoEntrega(null)}
+      onFinalizar={(itens, pagamento, troco, obs) => {
+        onFinalizar(modoEntrega.id, itens, pagamento, troco, obs)
+        setModoEntrega(null)
+      }}
+    />
+  )
 
   return (
     <div className="px-4 py-4">
       {pedidos.length === 0 && <EmptyState icon="🚚" text="Nenhum pedido cadastrado ainda" />}
       {pendentes.length > 0 && <>
         <SectionLabel icon="⏰" text={`Pendentes · ${pendentes.length}`} color="amber" />
-        {pendentes.map(p => <Card key={p.id} pedido={p} done={false} />)}
+        {pendentes.map(p => (
+          <div key={p.id} className="bg-white rounded-2xl border border-stone-200 shadow-sm mb-3 overflow-hidden">
+            <button className="w-full text-left p-4" onClick={() => setModoEntrega(p)}>
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-2xl font-black text-stone-800">{p.clienteNome}</div>
+                  {p.clienteTel && <div className="text-sm text-stone-400 mt-0.5">📱 {p.clienteTel}</div>}
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-black text-green-700">{fmt(calcTotal(p, produtos))}</div>
+                  <div className="text-xs text-amber-600 font-bold mt-0.5">{p.itens.length} item(ns) · Toque para entregar →</div>
+                </div>
+              </div>
+            </button>
+          </div>
+        ))}
       </>}
       {entregues.length > 0 && <>
         <SectionLabel icon="✅" text={`Entregues · ${entregues.length}`} color="green" />
-        {entregues.map(p => <Card key={p.id} pedido={p} done={true} />)}
+        {entregues.map(p => (
+          <div key={p.id} className="bg-white rounded-2xl border border-green-200 shadow-sm mb-3 overflow-hidden">
+            <button className="w-full text-left p-4" onClick={() => onView(p)}>
+              <div className="flex justify-between items-center">
+                <div>
+                  <div className="text-xl font-black text-stone-700">{p.clienteNome}</div>
+                  <div className="text-xs text-green-600 font-bold mt-0.5">
+                    ✅ Entregue em {new Date(p.dataEntrega).toLocaleDateString('pt-BR')} · {p.pagamento}
+                    {p.troco ? ` · Troco R$${p.troco}` : ''}
+                  </div>
+                </div>
+                <div className="text-lg font-black text-green-700">{fmt(calcTotal(p, produtos))}</div>
+              </div>
+            </button>
+          </div>
+        ))}
       </>}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODO ENTREGA — fluxo 3 etapas
+// ═══════════════════════════════════════════════════════════════════════════════
+function ModoEntrega({ pedido, produtos, onCancelar, onFinalizar }) {
+  const [etapa, setEtapa]   = useState(1)
+  const [itens, setItens]   = useState(pedido.itens.map(i => ({ ...i })))
+  const [pagamento, setPagamento] = useState(pedido.pagamento || 'PIX')
+  const [troco, setTroco]   = useState('')
+  const [obs, setObs]       = useState(pedido.obs || '')
+  const [busca, setBusca]   = useState('')
+  const [adicionando, setAdicionando] = useState(false)
+
+  const total = itens.reduce((s, it) => {
+    const p = produtos.find(x => x.id === it.produtoId)
+    return s + (p ? p.preco * it.qty : 0)
+  }, 0)
+
+  const setQty = (produtoId, qty) => {
+    if (qty <= 0) setItens(prev => prev.filter(i => i.produtoId !== produtoId))
+    else setItens(prev => prev.map(i => i.produtoId === produtoId ? { ...i, qty } : i))
+  }
+
+  const addItem = (produtoId) => {
+    if (itens.find(i => i.produtoId === produtoId)) {
+      setItens(prev => prev.map(i => i.produtoId === produtoId ? { ...i, qty: i.qty + 1 } : i))
+    } else {
+      setItens(prev => [...prev, { produtoId, qty: 1 }])
+    }
+    setBusca('')
+    setAdicionando(false)
+  }
+
+  const prodFiltrados = produtos
+    .filter(p => !itens.find(i => i.produtoId === p.id))
+    .filter(p => p.nome.toLowerCase().includes(busca.toLowerCase()) || p.cod.toString() === busca.trim())
+    .sort((a, b) => a.cod - b.cod)
+
+  const itensSorted = sortByCod(itens, produtos)
+
+  // ── ETAPA 1: Ajustar itens ──────────────────────────────────────────────────
+  if (etapa === 1) return (
+    <div className="px-4 py-4 space-y-3">
+      <div className="flex items-center gap-3">
+        <button onClick={onCancelar} className="text-stone-400 text-2xl active:text-stone-600">←</button>
+        <div className="flex-1">
+          <div className="text-xl font-black text-stone-800">{pedido.clienteNome}</div>
+          <div className="text-xs text-stone-400">{pedido.clienteTel}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-stone-400 font-bold">ETAPA 1 DE 3</div>
+          <div className="text-base font-black text-green-700">{fmt(total)}</div>
+        </div>
+      </div>
+
+      {/* Indicador de etapas */}
+      <div className="flex gap-1.5">
+        {[1,2,3].map(e => <div key={e} className={`flex-1 h-1.5 rounded-full ${e <= etapa ? 'bg-green-600' : 'bg-stone-200'}`}/>)}
+      </div>
+
+      <div className="text-xs font-black text-stone-400 uppercase tracking-widest">Conferir e Ajustar Itens</div>
+
+      {/* Lista de itens com +/- inline */}
+      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm divide-y divide-stone-50">
+        {itensSorted.map(it => {
+          const p = produtos.find(x => x.id === it.produtoId)
+          if (!p) return null
+          return (
+            <div key={it.produtoId} className="flex items-center px-4 py-3 gap-3">
+              <span className="text-xs bg-stone-100 text-stone-500 px-1.5 py-0.5 rounded font-black flex-shrink-0">{p.cod}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-stone-800 leading-tight">{p.nome}</div>
+                <div className="text-xs text-stone-400">{p.unidade} · {fmt(p.preco)}</div>
+              </div>
+              <div className="flex-shrink-0 text-xs font-black text-green-700 mr-2">{fmt(p.preco * it.qty)}</div>
+              <QtyCtrl qty={it.qty} onChange={qty => setQty(it.produtoId, qty)} />
+            </div>
+          )
+        })}
+        {itens.length === 0 && <div className="px-4 py-6 text-center text-stone-400 text-sm">Nenhum item</div>}
+      </div>
+
+      {/* Adicionar item extra */}
+      {adicionando ? (
+        <div className="bg-white rounded-2xl border border-green-200 shadow-sm p-4 space-y-2">
+          <div className="text-xs font-black text-green-700 uppercase tracking-widest">Adicionar item</div>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm">🔍</span>
+            <input autoFocus value={busca} onChange={e => setBusca(e.target.value)} placeholder="Nome ou código…"
+              className="w-full pl-8 pr-3 py-2.5 border border-stone-200 rounded-xl text-sm focus:outline-none focus:border-green-500"/>
+          </div>
+          {busca.length > 0 && prodFiltrados.map(p => (
+            <button key={p.id} onClick={() => addItem(p.id)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 bg-stone-50 rounded-xl active:bg-green-50 text-left">
+              <span className="text-xs bg-stone-200 text-stone-600 px-1.5 py-0.5 rounded font-black flex-shrink-0">{p.cod}</span>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-stone-800">{p.nome}</div>
+                <div className="text-xs text-stone-400">{p.unidade} · {fmt(p.preco)}</div>
+              </div>
+              <span className="text-green-700 text-lg font-black">＋</span>
+            </button>
+          ))}
+          <button onClick={() => { setAdicionando(false); setBusca('') }} className="text-xs text-stone-400 font-bold mt-1">cancelar</button>
+        </div>
+      ) : (
+        <button onClick={() => setAdicionando(true)}
+          className="w-full py-3 border-2 border-dashed border-stone-300 rounded-2xl text-sm font-bold text-stone-500 active:border-green-500 active:text-green-700">
+          ＋ Adicionar item extra
+        </button>
+      )}
+
+      <input value={obs} onChange={e => setObs(e.target.value)} placeholder="Observação (opcional)…"
+        className="w-full border border-stone-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 bg-white"/>
+
+      <button onClick={() => setEtapa(2)} disabled={itens.length === 0}
+        className="w-full py-4 bg-green-700 text-white rounded-2xl font-black text-lg active:bg-green-800 disabled:opacity-40">
+        Confirmar Itens → {fmt(total)}
+      </button>
+    </div>
+  )
+
+  // ── ETAPA 2: Pagamento ──────────────────────────────────────────────────────
+  if (etapa === 2) return (
+    <div className="px-4 py-4 space-y-4">
+      <div className="flex items-center gap-3">
+        <button onClick={() => setEtapa(1)} className="text-stone-400 text-2xl active:text-stone-600">←</button>
+        <div className="flex-1">
+          <div className="text-xl font-black text-stone-800">{pedido.clienteNome}</div>
+        </div>
+        <div className="text-right">
+          <div className="text-xs text-stone-400 font-bold">ETAPA 2 DE 3</div>
+        </div>
+      </div>
+
+      <div className="flex gap-1.5">
+        {[1,2,3].map(e => <div key={e} className={`flex-1 h-1.5 rounded-full ${e <= etapa ? 'bg-green-600' : 'bg-stone-200'}`}/>)}
+      </div>
+
+      {/* Total destacado */}
+      <div className="bg-green-800 text-white rounded-3xl p-5 text-center">
+        <div className="text-sm text-green-300 font-bold">TOTAL A RECEBER</div>
+        <div className="text-5xl font-black mt-1">{fmt(total)}</div>
+      </div>
+
+      <div className="text-xs font-black text-stone-400 uppercase tracking-widest">Forma de Pagamento</div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {PAGAMENTOS.filter(p => p !== 'A Definir').map(p => (
+          <button key={p} onClick={() => setPagamento(p)}
+            className={`py-4 rounded-2xl font-black text-base transition-colors ${pagamento === p ? 'bg-green-700 text-white' : 'bg-white text-stone-600 border border-stone-200 active:bg-stone-50'}`}>
+            {p === 'PIX' ? '📱 PIX' : p === 'Dinheiro' ? '💵 Dinheiro' : p === 'Cartão Crédito' ? '💳 Crédito' : '💳 Débito'}
+          </button>
+        ))}
+      </div>
+
+      {pagamento === 'Dinheiro' && (
+        <div>
+          <div className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">Valor Recebido (para calcular troco)</div>
+          <input value={troco} onChange={e => setTroco(e.target.value)} placeholder={`Ex: ${(Math.ceil(total / 10) * 10).toFixed(2)}`}
+            type="number" step="0.01"
+            className="w-full border border-stone-200 rounded-xl px-4 py-3 text-xl font-bold focus:outline-none focus:border-green-500 bg-white"/>
+          {troco && parseFloat(troco) >= total && (
+            <div className="mt-2 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-center">
+              <div className="text-xs text-amber-600 font-bold">TROCO</div>
+              <div className="text-3xl font-black text-amber-700">{fmt(parseFloat(troco) - total)}</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <button onClick={() => setEtapa(3)}
+        className="w-full py-4 bg-green-700 text-white rounded-2xl font-black text-lg active:bg-green-800">
+        Próximo → Finalizar
+      </button>
+    </div>
+  )
+
+  // ── ETAPA 3: Confirmação final ──────────────────────────────────────────────
+  return (
+    <div className="px-4 py-4 space-y-4">
+      <div className="flex items-center gap-3">
+        <button onClick={() => setEtapa(2)} className="text-stone-400 text-2xl active:text-stone-600">←</button>
+        <div className="flex-1 text-xl font-black text-stone-800">{pedido.clienteNome}</div>
+        <div className="text-xs text-stone-400 font-bold">ETAPA 3 DE 3</div>
+      </div>
+
+      <div className="flex gap-1.5">
+        {[1,2,3].map(e => <div key={e} className={`flex-1 h-1.5 rounded-full ${e <= etapa ? 'bg-green-600' : 'bg-stone-200'}`}/>)}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-4 space-y-2">
+        <div className="text-xs font-black text-stone-400 uppercase tracking-widest mb-2">Resumo Final</div>
+        {itensSorted.map(it => {
+          const p = produtos.find(x => x.id === it.produtoId)
+          if (!p) return null
+          return (
+            <div key={it.produtoId} className="flex justify-between text-sm">
+              <span className="text-stone-700"><span className="text-xs bg-stone-100 text-stone-500 px-1 rounded font-black mr-1">{p.cod}</span>{it.qty}× {p.nome}</span>
+              <span className="font-black text-stone-700">{fmt(p.preco * it.qty)}</span>
+            </div>
+          )
+        })}
+        <div className="border-t border-stone-100 pt-2 flex justify-between font-black text-base">
+          <span>Total</span><span className="text-green-700">{fmt(total)}</span>
+        </div>
+        <div className="flex justify-between text-sm text-stone-500">
+          <span>Pagamento</span><span className="font-bold text-stone-700">{pagamento}</span>
+        </div>
+        {pagamento === 'Dinheiro' && troco && parseFloat(troco) >= total && (
+          <div className="flex justify-between text-sm text-stone-500">
+            <span>Troco</span><span className="font-bold text-amber-700">{fmt(parseFloat(troco) - total)}</span>
+          </div>
+        )}
+        {obs && <div className="text-xs text-stone-400 italic mt-1">"{obs}"</div>}
+      </div>
+
+      <button onClick={() => onFinalizar(itens, pagamento, pagamento === 'Dinheiro' && troco ? (parseFloat(troco) - total).toFixed(2) : '', obs)}
+        className="w-full py-5 bg-green-700 text-white rounded-2xl font-black text-xl active:bg-green-800 shadow-lg">
+        ✅ Confirmar Entrega e Recebimento
+      </button>
     </div>
   )
 }
@@ -760,4 +996,151 @@ function EmptyState({ icon, text }) {
 function SectionLabel({ icon, text, color }) {
   const c = { green: 'text-green-600', amber: 'text-amber-600' }
   return <div className={`text-xs font-black uppercase tracking-widest mb-2 flex items-center gap-1.5 ${c[color]}`}>{icon} {text}</div>
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODAL: COLAR PEDIDO DO WHATSAPP
+// ═══════════════════════════════════════════════════════════════════════════════
+function ModalColarPedido({ produtos, onSave, onClose }) {
+  const [etapa, setEtapa]     = useState(1)       // 1=colar, 2=confirmar
+  const [texto, setTexto]     = useState('')
+  const [loading, setLoading] = useState(false)
+  const [erro, setErro]       = useState('')
+  const [parsed, setParsed]   = useState(null)    // { nome, itens }
+  const [nome, setNome]       = useState('')
+  const [tel, setTel]         = useState('')
+  const [pagto, setPagto]     = useState('A Definir')
+
+  const interpretar = async () => {
+    if (!texto.trim()) return
+    setLoading(true)
+    setErro('')
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 500,
+          system: `Você interpreta mensagens de pedidos do WhatsApp do Clube Korin.
+Extraia: nome do cliente (se houver) e itens (código numérico + quantidade).
+Responda SOMENTE JSON válido, sem texto, sem markdown:
+{"nome":"Nome ou null","itens":[{"cod":9,"qty":2}]}
+Ignore textos irrelevantes. Quantidade mínima é 1.`,
+          messages: [{ role: 'user', content: texto }]
+        })
+      })
+      const data = await res.json()
+      const raw  = data.content?.[0]?.text || ''
+      const obj  = JSON.parse(raw.replace(/```json|```/g, '').trim())
+
+      // Resolver cod → produtoId
+      const itensResolvidos = (obj.itens || []).reduce((acc, it) => {
+        const prod = produtos.find(p => p.cod === it.cod)
+        if (prod && it.qty > 0) acc.push({ produtoId: prod.id, qty: it.qty })
+        return acc
+      }, [])
+
+      if (!itensResolvidos.length) throw new Error('Nenhum item reconhecido. Verifique os códigos.')
+
+      setParsed({ nome: obj.nome || '', itens: itensResolvidos })
+      setNome(obj.nome || '')
+      setEtapa(2)
+    } catch (e) {
+      setErro(e.message || 'Erro ao interpretar. Tente novamente.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const confirmar = () => {
+    if (!nome.trim()) { alert('Informe o nome do cliente'); return }
+    onSave({ clienteNome: nome.trim(), clienteTel: tel, pagamento: pagto, itens: parsed.itens })
+  }
+
+  const total = parsed
+    ? parsed.itens.reduce((s, it) => {
+        const p = produtos.find(x => x.id === it.produtoId)
+        return s + (p ? p.preco * it.qty : 0)
+      }, 0)
+    : 0
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex flex-col justify-end">
+      <div className="bg-stone-50 rounded-t-3xl flex flex-col overflow-hidden" style={{ maxHeight: '92vh' }}>
+
+        {/* Header */}
+        <div className="bg-white flex items-center justify-between px-5 py-4 border-b border-stone-100 rounded-t-3xl flex-shrink-0">
+          <div>
+            <div className="text-lg font-black text-stone-800">📋 Colar Pedido do WhatsApp</div>
+            <div className="text-xs text-stone-400">{etapa === 1 ? 'Cole a mensagem do cliente' : 'Confirme os dados'}</div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-full bg-stone-100 text-xl">✕</button>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-4 py-4 space-y-4">
+
+          {/* ETAPA 1: colar texto */}
+          {etapa === 1 && <>
+            <textarea
+              value={texto}
+              onChange={e => setTexto(e.target.value)}
+              placeholder={"Cole aqui a mensagem do WhatsApp:\n\nJane\nCódigo 8: 2 bandejas\nCódigo 9: 2 bandejas\n..."}
+              rows={10}
+              className="w-full border border-stone-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-green-500 bg-white resize-none"
+            />
+            {erro && <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm text-red-700 font-semibold">{erro}</div>}
+            <button onClick={interpretar} disabled={loading || !texto.trim()}
+              className="w-full py-4 bg-green-700 text-white rounded-2xl font-black text-lg active:bg-green-800 disabled:opacity-40 flex items-center justify-center gap-2">
+              {loading ? <><span className="animate-spin">⟳</span> Interpretando…</> : '🤖 Interpretar Pedido'}
+            </button>
+          </>}
+
+          {/* ETAPA 2: confirmar */}
+          {etapa === 2 && parsed && <>
+            <div className="bg-white rounded-2xl p-4 border border-stone-100 shadow-sm space-y-3">
+              <div className="text-xs font-black text-stone-400 uppercase tracking-widest">Cliente</div>
+              <input value={nome} onChange={e => setNome(e.target.value)} placeholder="Nome completo *"
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-base font-semibold focus:outline-none focus:border-green-500"/>
+              <input value={tel} onChange={e => setTel(e.target.value)} placeholder="WhatsApp (opcional)"
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:border-green-500"/>
+              <select value={pagto} onChange={e => setPagto(e.target.value)}
+                className="w-full border border-stone-200 rounded-xl px-4 py-3 text-base bg-white focus:outline-none focus:border-green-500 font-semibold">
+                {PAGAMENTOS.map(p => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+
+            <div className="bg-green-50 rounded-2xl p-4 border border-green-100">
+              <div className="text-xs font-black text-green-700 uppercase tracking-widest mb-3">✅ Itens Identificados ({parsed.itens.length})</div>
+              {sortByCod(parsed.itens, produtos).map(it => {
+                const p = produtos.find(x => x.id === it.produtoId)
+                if (!p) return null
+                return (
+                  <div key={it.produtoId} className="flex justify-between items-center py-2 border-b border-green-100 last:border-0">
+                    <span className="text-sm font-bold text-stone-700">
+                      <span className="text-xs bg-green-200 text-green-800 px-1.5 py-0.5 rounded font-black mr-1.5">{p.cod}</span>
+                      {it.qty}× {p.nome}
+                    </span>
+                    <span className="text-sm font-black text-green-700">{fmt(p.preco * it.qty)}</span>
+                  </div>
+                )
+              })}
+              <div className="flex justify-between pt-3 mt-1 font-black">
+                <span className="text-stone-700">Total</span>
+                <span className="text-green-800">{fmt(total)}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button onClick={() => setEtapa(1)} className="px-5 py-4 bg-stone-100 text-stone-600 rounded-2xl font-black active:bg-stone-200">← Redigitar</button>
+              <button onClick={confirmar} className="flex-1 py-4 bg-green-700 text-white rounded-2xl font-black text-lg active:bg-green-800">
+                Salvar Pedido — {fmt(total)}
+              </button>
+            </div>
+          </>}
+
+        </div>
+      </div>
+    </div>
+  )
 }
