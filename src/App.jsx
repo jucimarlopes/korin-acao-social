@@ -176,10 +176,7 @@ export default function App() {
         </div>
         {/* Título + período + sync */}
         <div className="px-4 py-2.5 flex items-center justify-between">
-          <div>
-            <div className="text-xs text-green-300 font-bold tracking-widest uppercase leading-none">Lattuga Orgânicos</div>
-            <div className="text-lg font-black leading-tight">Ação Social Korin</div>
-          </div>
+          <div className="text-lg font-black leading-tight">Ação Social Korin</div>
           <div className="flex flex-col items-end gap-0.5">
             <button onClick={() => setModal('periodo')} className="text-base font-black active:opacity-60">{periodo}</button>
             <SyncBadge online={online} queueSize={queueSize} lastSync={lastSync} syncing={syncing} />
@@ -213,10 +210,10 @@ export default function App() {
       </nav>
 
       {/* RODAPÉ */}
-      <footer className="fixed bottom-0 left-0 w-full bg-green-900 z-20 flex items-center justify-between px-3 py-1.5">
-        <span className="text-green-400 text-xs font-semibold">© Todos os Direitos Reservados — <a href="https://lattuga-organicos.vercel.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">Lattuga Orgânicos</a></span>
+      <footer className="fixed bottom-0 left-0 w-full bg-green-900 z-20 flex items-center justify-between px-3 py-1">
+        <span className="text-green-400 font-semibold whitespace-nowrap" style={{fontSize:'10px'}}>© Todos os Direitos Reservados — <a href="https://lattuga-organicos.vercel.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-white">Lattuga Orgânicos</a></span>
         <a href="https://www.personalsupport.tec.br/" target="_blank" rel="noopener noreferrer"
-          className="text-green-300 text-xs font-bold hover:text-white transition-colors underline underline-offset-2 flex-shrink-0 ml-2">
+          className="text-green-300 font-bold hover:text-white transition-colors underline underline-offset-2 flex-shrink-0 ml-2 whitespace-nowrap" style={{fontSize:'10px'}}>
           Desenvolvido por Personal Support
         </a>
       </footer>
@@ -303,20 +300,20 @@ function PedidosScreen({ pedidos, produtos, onAdd, onColar, onEdit, onDelete, on
                 </span>
               </button>
               <div className="grid grid-cols-3 border-t border-stone-100">
-                <button onClick={() => onEdit(pedido)} className="py-2.5 text-xs font-bold text-blue-600 flex items-center justify-center gap-1 active:bg-blue-50">✏️ Editar</button>
+                <button onClick={e => { e.stopPropagation(); onEdit(pedido) }} className="py-2.5 text-xs font-bold text-blue-600 flex items-center justify-center gap-1 active:bg-blue-50">✏️ Editar</button>
                 {pedido.status === 'pendente'
-                  ? <button onClick={() => onIniciarEntrega(pedido)} className="py-2.5 text-xs font-bold text-green-700 flex items-center justify-center border-x border-stone-100 active:bg-green-50">✓ Entregar</button>
+                  ? <button onClick={e => { e.stopPropagation(); onIniciarEntrega(pedido) }} className="py-2.5 text-xs font-bold text-green-700 flex items-center justify-center border-x border-stone-100 active:bg-green-50">✓ Entregar</button>
                   : <div className="py-2.5 text-xs text-stone-300 flex items-center justify-center border-x border-stone-100">✅ Entregue</div>
                 }
-                <button onClick={() => onDelete(pedido.id)} className="py-2.5 text-xs font-bold text-red-500 flex items-center justify-center active:bg-red-50">🗑️ Excluir</button>
+                <button onClick={e => { e.stopPropagation(); onDelete(pedido.id) }} className="py-2.5 text-xs font-bold text-red-500 flex items-center justify-center active:bg-red-50">🗑️ Excluir</button>
               </div>
             </div>
           )
         })}
       </div>
 
-      <button onClick={onAdd} className="fixed bottom-28 right-4 w-16 h-16 bg-green-700 text-white rounded-full shadow-xl flex items-center justify-center z-10 active:scale-95 text-3xl">＋</button>
-      <button onClick={onColar} title="Colar pedido do WhatsApp" className="fixed bottom-28 right-24 w-14 h-14 bg-white border-2 border-green-700 text-green-700 rounded-full shadow-xl flex flex-col items-center justify-center z-10 active:scale-95">
+      <button onClick={onAdd} className="fixed bottom-36 right-4 w-16 h-16 bg-green-700 text-white rounded-full shadow-xl flex items-center justify-center z-30 active:scale-95 text-3xl">＋</button>
+      <button onClick={onColar} title="Colar pedido do WhatsApp" className="fixed bottom-36 right-24 w-14 h-14 bg-white border-2 border-green-700 text-green-700 rounded-full shadow-xl flex flex-col items-center justify-center z-30 active:scale-95">
         <span className="text-xl leading-none">📋</span>
         <span className="text-xs font-black leading-none mt-0.5">Colar</span>
       </button>
